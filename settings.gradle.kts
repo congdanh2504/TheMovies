@@ -21,5 +21,13 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "The Movies"
+
 include(":app")
- 
+include(":core:domain")
+include(":core:data")
+include(":feature:home")
+include(":feature:search")
+include(":feature:watchlist")
+include(":core:database")
+include(":core:network")
+include(":feature:detailmovie")
