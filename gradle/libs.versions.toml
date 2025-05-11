@@ -1,5 +1,7 @@
 [versions]
+accompanistSystemuicontroller = "0.32.0"
 agp = "8.10.0"
+coreSplashscreen = "1.0.1"
 kotlin = "2.1.20"
 coreKtx = "1.16.0"
 junit = "4.13.2"
@@ -10,13 +12,17 @@ activityCompose = "1.10.1"
 composeBom = "2025.05.00"
 hilt = "2.56.2"
 ksp = "2.1.20-2.0.1"
+navigationCompose = "2.9.0"
 room = "2.7.1"
 androidDesugarJdkLibs = "2.1.5"
 appcompat = "1.7.0"
 material = "1.12.0"
 
 [libraries]
+accompanist-systemuicontroller = { module = "com.google.accompanist:accompanist-systemuicontroller", version.ref = "accompanistSystemuicontroller" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-core-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "coreSplashscreen" }
+androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
@@ -58,3 +64,4 @@ themovies-android-application = { id = "themovies.android.application", version 
 themovies-android-library = { id = "themovies.android.library", version = "unspecified" }
 themovies-android-hilt = { id = "themovies.android.hilt", version = "unspecified" }
 themovies-android-room = { id = "themovies.android.room", version = "unspecified" }
+themovies-android-compose = { id = "themovies.android.compose", version = "unspecified" }

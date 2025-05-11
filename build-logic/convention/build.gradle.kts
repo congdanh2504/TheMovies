@@ -41,5 +41,9 @@ gradlePlugin {
             id = "themovies.android.room"
             implementationClass = "AndroidRoomConventionPlugin"
         }
+        register("androidCompose") {
+            id = "themovies.android.compose"
+            implementationClass = "AndroidComposeConventionPlugin"
+        }
     }
 }
