@@ -19,12 +19,14 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -33,6 +35,7 @@ import androidx.navigation.compose.rememberNavController
 import com.google.accompanist.systemuicontroller.SystemUiController
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.practice.home.HomeScreen
+import com.practice.home.HomeViewModel
 import com.practice.search.SearchScreen
 import com.practice.themovies.ui.theme.DarkGray
 import com.practice.themovies.ui.theme.TheMoviesTheme
@@ -86,7 +89,25 @@ fun NavigationGraph(navController: NavHostController, paddingValues: PaddingValu
         startDestination = BottomNavItem.Home.route,
         modifier = Modifier.padding(paddingValues)
     ) {
-        composable(BottomNavItem.Home.route) { HomeScreen() }
+        composable(BottomNavItem.Home.route) {
+            val homeViewModel: HomeViewModel = hiltViewModel()
+            val homeUiState by homeViewModel.uiState.collectAsState()
+            HomeScreen(
+                homeUiState = homeUiState,
+                onMovieClick = { movieId ->
+//                    navController.navigate("detail/$movieId")
+                },
+                onSearchClick = {
+                    navController.navigate(BottomNavItem.Search.route) {
+                        popUpTo(navController.graph.startDestinationId) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                }
+            )
+        }
         composable(BottomNavItem.Search.route) { SearchScreen() }
         composable(BottomNavItem.Profile.route) { WatchListScreen() }
     }

@@ -24,7 +24,7 @@ interface TheMoviesApi {
     suspend fun getUpcoming(): PageResponse<NetworkMovie>
 
     @GET("movie/{movie_id}")
-    suspend fun getMovieDetail(
+    suspend fun getMovieDetails(
         @Path("movie_id") movieId: Int
     ): NetworkMovieDetail
 

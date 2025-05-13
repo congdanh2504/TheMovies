@@ -7,7 +7,7 @@ import com.squareup.moshi.JsonClass
 data class NetworkMovieDetail(
     @Json(name = "id") val id: Int,
     @Json(name = "backdrop_path") val backdropPath: String?,
-    @Json(name = "genres") val genres: List<Genre>,
+    @Json(name = "genres") val genres: List<NetworkGenre>,
     @Json(name = "original_title") val originalTitle: String,
     @Json(name = "original_language") val originalLanguage: String,
     @Json(name = "overview") val overview: String?,
@@ -22,7 +22,7 @@ data class NetworkMovieDetail(
 )
 
 @JsonClass(generateAdapter = true)
-data class Genre(
+data class NetworkGenre(
     @Json(name = "id") val id: Int,
     @Json(name = "name") val name: String
 )

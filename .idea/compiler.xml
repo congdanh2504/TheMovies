@@ -10,6 +10,7 @@
       <module name="The_Movies.core.database" target="21" />
       <module name="The_Movies.core.domain" target="21" />
       <module name="The_Movies.core.network" target="21" />
+      <module name="The_Movies.core.ui" target="21" />
       <module name="The_Movies.feature.detailmovie" target="21" />
       <module name="The_Movies.feature.home" target="21" />
       <module name="The_Movies.feature.search" target="21" />
