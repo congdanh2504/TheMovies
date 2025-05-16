@@ -15,12 +15,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -37,14 +37,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 import com.practice.domain.model.Movie
+import com.practice.ui.Montserrat
 
 @Composable
 fun HomeScreen(
@@ -75,7 +80,6 @@ fun HomeScreen(
             featuredMovies = homeUiState.topRatedMovies,
             onMovieClick = onMovieClick
         )
-        Spacer(modifier = Modifier.height(24.dp))
         CategoryTabsSection(tabs = tabs) {
             selectedTabIndex = tabs.indexOf(it)
         }
@@ -142,9 +146,7 @@ fun MoviePosterWithNumber(movie: Movie, index: Int, onMovieClick: (Movie) -> Uni
         modifier = Modifier
             .padding(8.dp)
             .width(160.dp)
-            .height(240.dp)
-            .clip(RoundedCornerShape(16.dp))
-            .background(Color.Gray)
+            .height(260.dp)
             .clickable {
                 onMovieClick(movie)
             }
@@ -152,17 +154,57 @@ fun MoviePosterWithNumber(movie: Movie, index: Int, onMovieClick: (Movie) -> Uni
         Image(
             painter = rememberAsyncImagePainter(movie.posterPath),
             contentDescription = "Movie Poster",
-            modifier = Modifier.fillMaxSize()
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(start = 10.dp, bottom = 42.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .background(Color.Gray)
         )
 
-        Text(
+        StrokedText(
             text = "${index + 1}",
-            color = Color.Blue,
+            fontFamily = Montserrat,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 96.sp,
             modifier = Modifier
                 .align(Alignment.BottomStart)
-                .padding(8.dp)
-                .background(Color.White.copy(alpha = 0.7f), shape = CircleShape)
-                .padding(horizontal = 8.dp, vertical = 4.dp)
+        )
+    }
+}
+
+@Composable
+fun StrokedText(
+    text: String,
+    fontSize: TextUnit = 96.sp,
+    fontFamily: FontFamily,
+    modifier: Modifier = Modifier,
+    fontWeight: FontWeight = FontWeight.SemiBold,
+    strokeColor: Color = Color(0xFF0296E5),
+    fillColor: Color = Color(0xFF242A32)
+) {
+    Box(
+        modifier = modifier
+            .wrapContentSize()
+    ) {
+        Text(
+            text = text,
+            fontSize = fontSize,
+            fontFamily = fontFamily,
+            fontWeight = fontWeight,
+            color = strokeColor,
+            style = TextStyle(
+                drawStyle = Stroke(
+                    width = 5f
+                )
+            )
+        )
+        Text(
+            text = text,
+            fontSize = fontSize,
+            fontFamily = fontFamily,
+            fontWeight = fontWeight,
+            color = fillColor
         )
     }
 }
@@ -176,20 +218,19 @@ fun FeaturedMoviesSection(featuredMovies: List<Movie>, onMovieClick: (Int) -> Un
             userScrollEnabled = false
         ) {
             items(5) {
-                Box(
-                    modifier = Modifier
-                        .padding(8.dp)
-                        .width(160.dp)
-                        .height(240.dp)
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(Color.Gray.copy(alpha = 0.3f))
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(Color.LightGray.copy(alpha = 0.5f))
-                    )
-                }
+                MoviePosterWithNumber(
+                    movie = Movie(
+                        id = 0,
+                        title = "",
+                        overview = "",
+                        posterPath = "",
+                        backdropPath = "",
+                        releaseDate = "",
+                        voteAverage = 0.0,
+                        voteCount = 0
+                    ),
+                    index = it
+                ) {}
             }
         }
     } else {
@@ -319,7 +360,7 @@ fun HomeScreenPreview() {
     )
 
     HomeScreen(
-        homeUiState = HomeUiState(topRatedMovies = movies),
+        homeUiState = HomeUiState(topRatedMovies = movies, nowPlayingMovies = movies),
         onMovieClick = {},
         onSearchClick = {})
 }
