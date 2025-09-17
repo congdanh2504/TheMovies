@@ -37,6 +37,7 @@ import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.practice.home.HomeScreen
 import com.practice.home.HomeViewModel
 import com.practice.search.SearchScreen
+import com.practice.search.SearchViewModel
 import com.practice.themovies.ui.theme.DarkGray
 import com.practice.themovies.ui.theme.TheMoviesTheme
 import com.practice.watchlist.WatchListScreen
@@ -108,8 +109,22 @@ fun NavigationGraph(navController: NavHostController, paddingValues: PaddingValu
                 }
             )
         }
-        composable(BottomNavItem.Search.route) { SearchScreen() }
-        composable(BottomNavItem.Profile.route) { WatchListScreen() }
+        composable(BottomNavItem.Search.route) {
+            val searchViewModel: SearchViewModel = hiltViewModel()
+            SearchScreen(
+                onBackClick = {
+                    navController.popBackStack()
+                },
+                searchViewModel = searchViewModel
+            )
+        }
+        composable(BottomNavItem.Profile.route) {
+            WatchListScreen(
+                onBackClick = {
+                    navController.popBackStack()
+                }
+            )
+        }
     }
 }
 

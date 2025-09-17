@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -21,8 +20,9 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Icon
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ScrollableTabRow
 import androidx.compose.material3.Tab
@@ -39,7 +39,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -50,6 +49,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 import com.practice.domain.model.Movie
 import com.practice.ui.Montserrat
+import com.practice.ui.SearchBar
 
 @Composable
 fun HomeScreen(
@@ -60,31 +60,40 @@ fun HomeScreen(
 ) {
     val tabs = listOf("Now playing", "Upcoming", "Top rated", "Popular")
     var selectedTabIndex by remember { mutableIntStateOf(0) }
-    val movies = when (selectedTabIndex) {
-        0 -> homeUiState.nowPlayingMovies
-        1 -> homeUiState.upcomingMovies
-        2 -> homeUiState.topRatedMovies
-        3 -> homeUiState.popularMovies
-        else -> emptyList()
-    }
 
     Column(
         modifier = modifier
             .fillMaxSize()
     ) {
         TopBar()
-        Spacer(modifier = Modifier.height(8.dp))
-        SearchBar(onSearchClick = onSearchClick)
-        Spacer(modifier = Modifier.height(16.dp))
-        FeaturedMoviesSection(
-            featuredMovies = homeUiState.topRatedMovies,
-            onMovieClick = onMovieClick
-        )
-        CategoryTabsSection(tabs = tabs) {
-            selectedTabIndex = tabs.indexOf(it)
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .verticalScroll(rememberScrollState())
+        ) {
+            Spacer(modifier = Modifier.height(8.dp))
+            SearchBar(
+                onSearchClick = onSearchClick,
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            FeaturedMoviesSection(
+                featuredMovies = homeUiState.topRatedMovies,
+                onMovieClick = onMovieClick
+            )
+            CategoryTabsSection(tabs = tabs) { tabTitle ->
+                selectedTabIndex = tabs.indexOf(tabTitle)
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            val moviesForSelectedTab = when (selectedTabIndex) {
+                0 -> homeUiState.nowPlayingMovies
+                1 -> homeUiState.upcomingMovies
+                2 -> homeUiState.topRatedMovies
+                3 -> homeUiState.popularMovies
+                else -> emptyList()
+            }
+            MovieGridSection(moviesForSelectedTab, onMovieClick)
         }
-        Spacer(modifier = Modifier.height(16.dp))
-        MovieGridSection(movies, onMovieClick)
     }
 }
 
@@ -101,43 +110,6 @@ fun TopBar(modifier: Modifier = Modifier) {
             .fillMaxWidth()
             .padding(16.dp)
     )
-}
-
-@Composable
-fun SearchBar(
-    modifier: Modifier = Modifier,
-    placeholderText: String = "Search",
-    onSearchClick: () -> Unit = {},
-) {
-    Box(
-        modifier = modifier
-            .padding(horizontal = 16.dp)
-            .fillMaxWidth()
-            .height(48.dp)
-            .background(Color(0xFF2C2C2C), shape = RoundedCornerShape(16.dp))
-            .padding(horizontal = 16.dp)
-            .clickable {
-                onSearchClick()
-            },
-        contentAlignment = Alignment.CenterStart,
-    ) {
-        Row(
-            modifier = Modifier.fillMaxSize(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                text = placeholderText,
-                color = Color.Gray,
-                style = MaterialTheme.typography.bodyMedium
-            )
-            Icon(
-                painter = painterResource(R.drawable.ic_search_left),
-                contentDescription = "Search Icon",
-                tint = Color.Gray
-            )
-        }
-    }
 }
 
 @Composable
@@ -299,39 +271,38 @@ fun MovieGridSection(movies: List<Movie>, onMovieClick: (Int) -> Unit) {
     LazyVerticalGrid(
         columns = GridCells.Fixed(3),
         modifier = Modifier
-            .fillMaxSize()
+            .height(500.dp)
             .padding(horizontal = 16.dp),
         contentPadding = PaddingValues(bottom = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
         horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         items(items = movies, key = { it.id }) { movie ->
-            MovieCard(movie = movie, onMovieClick = onMovieClick)
+            MovieCard(imageUrl = movie.posterPath ?: "") {
+                onMovieClick(movie.id)
+            }
         }
     }
 }
 
 @Composable
-fun MovieCard(movie: Movie, onMovieClick: (Int) -> Unit) {
+fun MovieCard(imageUrl: String, onMovieClick: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .aspectRatio(0.7f)
             .clip(RoundedCornerShape(16.dp))
             .background(Color.Gray)
-            .clickable {
-                onMovieClick(movie.id)
-            }
+            .clickable { onMovieClick() }
     ) {
         Image(
-            painter = rememberAsyncImagePainter(movie.posterPath),
+            painter = rememberAsyncImagePainter(imageUrl),
             contentDescription = "Movie Poster",
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
         )
     }
 }
-
 
 @Preview
 @Composable
@@ -356,11 +327,97 @@ fun HomeScreenPreview() {
             releaseDate = "2023-02-01",
             voteAverage = 7.5,
             voteCount = 200
+        ),
+        Movie(
+            id = 3,
+            title = "Movie 3",
+            overview = "Overview 3",
+            posterPath = "https://example.com/poster3.jpg",
+            backdropPath = "https://example.com/backdrop3.jpg",
+            releaseDate = "2023-03-01",
+            voteAverage = 7.0,
+            voteCount = 150
+        ),
+        Movie(
+            id = 4,
+            title = "Movie 4",
+            overview = "Overview 4",
+            posterPath = "https://example.com/poster4.jpg",
+            backdropPath = "https://example.com/backdrop4.jpg",
+            releaseDate = "2023-04-01",
+            voteAverage = 6.5,
+            voteCount = 120
+        ),
+        Movie(
+            id = 5,
+            title = "Movie 5",
+            overview = "Overview 5",
+            posterPath = "https://example.com/poster5.jpg",
+            backdropPath = "https://example.com/backdrop5.jpg",
+            releaseDate = "2023-05-01",
+            voteAverage = 9.0,
+            voteCount = 300
+        ),
+        Movie(
+            id = 6,
+            title = "Movie 6",
+            overview = "Overview 6",
+            posterPath = "https://example.com/poster6.jpg",
+            backdropPath = "https://example.com/backdrop6.jpg",
+            releaseDate = "2023-06-01",
+            voteAverage = 8.5,
+            voteCount = 250
+        ),
+        Movie(
+            id = 7,
+            title = "Movie 7",
+            overview = "Overview 7",
+            posterPath = "https://example.com/poster7.jpg",
+            backdropPath = "https://example.com/backdrop7.jpg",
+            releaseDate = "2023-07-01",
+            voteAverage = 7.8,
+            voteCount = 180
+        ),
+        Movie(
+            id = 8,
+            title = "Movie 8",
+            overview = "Overview 8",
+            posterPath = "https://example.com/poster8.jpg",
+            backdropPath = "https://example.com/backdrop8.jpg",
+            releaseDate = "2023-08-01",
+            voteAverage = 7.2,
+            voteCount = 130
+        ),
+        Movie(
+            id = 9,
+            title = "Movie 9",
+            overview = "Overview 9",
+            posterPath = "https://example.com/poster9.jpg",
+            backdropPath = "https://example.com/backdrop9.jpg",
+            releaseDate = "2023-09-01",
+            voteAverage = 6.9,
+            voteCount = 110
+        ),
+        Movie(
+            id = 10,
+            title = "Movie 10",
+            overview = "Overview 10",
+            posterPath = "https://example.com/poster10.jpg",
+            backdropPath = "https://example.com/backdrop10.jpg",
+            releaseDate = "2023-10-01",
+            voteAverage = 9.2,
+            voteCount = 350
         )
     )
 
     HomeScreen(
-        homeUiState = HomeUiState(topRatedMovies = movies, nowPlayingMovies = movies),
+        homeUiState = HomeUiState(
+            nowPlayingMovies = movies,
+            upcomingMovies = movies,
+            topRatedMovies = movies,
+            popularMovies = movies
+        ),
         onMovieClick = {},
-        onSearchClick = {})
+        onSearchClick = {}
+    )
 }
