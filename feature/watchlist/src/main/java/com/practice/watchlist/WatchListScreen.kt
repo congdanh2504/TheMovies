@@ -2,7 +2,6 @@ package com.practice.watchlist
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -18,6 +17,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Bookmark
+import androidx.compose.material.icons.outlined.CalendarMonth
+import androidx.compose.material.icons.outlined.ConfirmationNumber
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.Icon
@@ -160,7 +161,12 @@ private fun WatchlistMovieCard(movie: WatchlistMovie) {
             Spacer(modifier = Modifier.height(8.dp))
 
             MetaRow(label = movie.releaseDate.take(4)) {
-                Text(text = "📅", fontSize = 10.sp)
+                Icon(
+                    imageVector = Icons.Outlined.CalendarMonth,
+                    contentDescription = null,
+                    tint = TextGrey,
+                    modifier = Modifier.size(14.dp)
+                )
             }
 
             Spacer(modifier = Modifier.height(4.dp))
@@ -182,7 +188,12 @@ private fun WatchlistMovieCard(movie: WatchlistMovie) {
                 modifier = Modifier.fillMaxWidth()
             ) {
                 MetaRow(label = movie.genre) {
-                    Text(text = "🎫", fontSize = 10.sp)
+                    Icon(
+                        imageVector = Icons.Outlined.ConfirmationNumber,
+                        contentDescription = null,
+                        tint = TextGrey,
+                        modifier = Modifier.size(14.dp)
+                    )
                 }
                 RatingChip(rating = movie.userRating ?: movie.voteAverage.toFloat())
             }
