@@ -40,6 +40,7 @@ import com.practice.search.SearchScreen
 import com.practice.search.SearchViewModel
 import com.practice.themovies.ui.theme.DarkGray
 import com.practice.themovies.ui.theme.TheMoviesTheme
+import com.practice.detailmovie.DetailMovieScreen
 import com.practice.watchlist.WatchListScreen
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -96,7 +97,7 @@ fun NavigationGraph(navController: NavHostController, paddingValues: PaddingValu
             HomeScreen(
                 homeUiState = homeUiState,
                 onMovieClick = { movieId ->
-//                    navController.navigate("detail/$movieId")
+                    navController.navigate("detail/$movieId")
                 },
                 onSearchClick = {
                     navController.navigate(BottomNavItem.Search.route) {
@@ -124,6 +125,9 @@ fun NavigationGraph(navController: NavHostController, paddingValues: PaddingValu
                     navController.popBackStack()
                 }
             )
+        }
+        composable("detail/{movieId}") {
+            DetailMovieScreen(onBackClick = { navController.popBackStack() })
         }
     }
 }
