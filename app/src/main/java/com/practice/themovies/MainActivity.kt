@@ -78,8 +78,11 @@ fun ConfigureSystemUI(systemUiController: SystemUiController, backgroundColor: C
 
 @Composable
 fun MainScaffold(navController: NavHostController) {
+    val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
+    val showBottomBar = currentRoute != DetailDestination.ROUTE
+
     Scaffold(
-        bottomBar = { BottomNavigationBar(navController) },
+        bottomBar = { if (showBottomBar) BottomNavigationBar(navController) },
         containerColor = MaterialTheme.colorScheme.surface,
     ) { innerPadding ->
         NavigationGraph(navController, innerPadding)
@@ -115,17 +118,15 @@ fun NavigationGraph(navController: NavHostController, paddingValues: PaddingValu
         composable(BottomNavItem.Search.route) {
             val searchViewModel: SearchViewModel = hiltViewModel()
             SearchScreen(
-                onBackClick = {
-                    navController.popBackStack()
-                },
+                onBackClick = { navController.popBackStack() },
+                onMovieClick = { navController.navigate(DetailDestination.createRoute(it)) },
                 searchViewModel = searchViewModel
             )
         }
         composable(BottomNavItem.Profile.route) {
             WatchListScreen(
-                onBackClick = {
-                    navController.popBackStack()
-                }
+                onBackClick = { navController.popBackStack() },
+                onMovieClick = { navController.navigate(DetailDestination.createRoute(it)) }
             )
         }
         composable(

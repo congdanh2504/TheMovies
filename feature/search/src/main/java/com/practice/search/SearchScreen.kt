@@ -36,6 +36,7 @@ import com.practice.ui.ToolBar
 @Composable
 fun SearchScreen(
     onBackClick: () -> Unit,
+    onMovieClick: (Int) -> Unit = {},
     searchViewModel: SearchViewModel,
 ) {
     val state by searchViewModel.state.collectAsState()
@@ -78,7 +79,8 @@ fun SearchScreen(
             items(items = state.movies, key = { it.id }) {
                 SearchMovie(
                     movie = it,
-                    posterPainter = rememberAsyncImagePainter(it.posterPath)
+                    posterPainter = rememberAsyncImagePainter(it.posterPath),
+                    onClick = onMovieClick
                 )
             }
 

@@ -1,6 +1,7 @@
 package com.practice.watchlist
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -48,6 +49,7 @@ private val AccentOrange = Color(0xFFFF8700)
 @Composable
 fun WatchListScreen(
     onBackClick: () -> Unit,
+    onMovieClick: (Int) -> Unit = {},
     viewModel: WatchListViewModel = hiltViewModel()
 ) {
     val watchlist by viewModel.watchlist.collectAsState()
@@ -80,7 +82,7 @@ fun WatchListScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 items(items = watchlist, key = { it.id }) { movie ->
-                    WatchlistMovieCard(movie = movie)
+                    WatchlistMovieCard(movie = movie, onClick = onMovieClick)
                 }
                 item { Spacer(modifier = Modifier.height(16.dp)) }
             }
@@ -123,9 +125,11 @@ private fun WatchListEmptyState(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun WatchlistMovieCard(movie: WatchlistMovie) {
+private fun WatchlistMovieCard(movie: WatchlistMovie, onClick: (Int) -> Unit = {}) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick(movie.id) },
         verticalAlignment = Alignment.CenterVertically
     ) {
         AsyncImage(

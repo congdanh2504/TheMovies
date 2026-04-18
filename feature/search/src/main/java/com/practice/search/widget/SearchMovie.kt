@@ -2,6 +2,7 @@ package com.practice.search.widget
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -37,10 +38,12 @@ fun SearchMovie(
     movie: Movie,
     modifier: Modifier = Modifier,
     posterPainter: Painter,
+    onClick: (Int) -> Unit = {},
 ) {
     Row(
         modifier = modifier
             .fillMaxWidth()
+            .clickable { onClick(movie.id) }
             .padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
