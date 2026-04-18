@@ -13,5 +13,5 @@ dependencies {
     implementation(project(":core:ui"))
     implementation(libs.coil.compose)
     implementation(libs.androidx.hilt.navigation.compose)
-    implementation("androidx.compose.material:material-icons-extended")
+    implementation(libs.androidx.compose.material.icons.extended)
 }
