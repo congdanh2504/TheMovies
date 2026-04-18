@@ -99,7 +99,7 @@ fun NavigationGraph(navController: NavHostController, paddingValues: PaddingValu
             HomeScreen(
                 homeUiState = homeUiState,
                 onMovieClick = { movieId ->
-                    navController.navigate("detail/$movieId")
+                    navController.navigate(DetailDestination.createRoute(movieId))
                 },
                 onSearchClick = {
                     navController.navigate(BottomNavItem.Search.route) {
@@ -129,8 +129,8 @@ fun NavigationGraph(navController: NavHostController, paddingValues: PaddingValu
             )
         }
         composable(
-            route = "detail/{movieId}",
-            arguments = listOf(navArgument("movieId") { type = NavType.IntType })
+            route = DetailDestination.ROUTE,
+            arguments = listOf(navArgument(DetailDestination.ARG_MOVIE_ID) { type = NavType.IntType })
         ) {
             DetailMovieScreen(onBackClick = { navController.popBackStack() })
         }
@@ -141,6 +141,12 @@ sealed class BottomNavItem(val route: String, val icon: Int, val label: String) 
     object Home : BottomNavItem("home", R.drawable.ic_home, "Home")
     object Search : BottomNavItem("search", R.drawable.ic_search, "Search")
     object Profile : BottomNavItem("watchlist", R.drawable.ic_save, "Watch List")
+}
+
+object DetailDestination {
+    const val ARG_MOVIE_ID = "movieId"
+    const val ROUTE = "detail/{$ARG_MOVIE_ID}"
+    fun createRoute(movieId: Int) = "detail/$movieId"
 }
 
 @Composable
