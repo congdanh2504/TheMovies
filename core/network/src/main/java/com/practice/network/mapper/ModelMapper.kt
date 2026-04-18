@@ -52,7 +52,7 @@ fun NetworkCast.toDomain(): Cast = Cast(
     castId = castId,
     character = character,
     name = name,
-    profilePath = baseImageUrl + profilePath
+    profilePath = profilePath?.let { baseImageUrl + it }
 )
 
 fun NetworkReview.toDomain(): Review = Review(

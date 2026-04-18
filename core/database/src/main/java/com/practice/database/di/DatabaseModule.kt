@@ -23,5 +23,6 @@ object DatabaseModule {
             .build()
 
     @Provides
+    @Singleton
     fun provideWatchlistDao(db: TheMoviesDatabase): WatchlistDao = db.watchlistDao()
 }
