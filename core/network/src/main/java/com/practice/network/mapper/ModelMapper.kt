@@ -58,7 +58,11 @@ fun NetworkCast.toDomain(): Cast = Cast(
 fun NetworkReview.toDomain(): Review = Review(
     author = author,
     content = content,
-    createdAt = createdAt
+    createdAt = createdAt,
+    avatarPath = authorDetails?.avatarPath?.let { path ->
+        if (path.startsWith("http")) path else baseImageUrl + path
+    },
+    rating = authorDetails?.rating
 )
 
 fun PageResponse<NetworkMovie>.toDomain(): MoviesPage = MoviesPage(

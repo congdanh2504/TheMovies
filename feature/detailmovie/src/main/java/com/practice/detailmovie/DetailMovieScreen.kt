@@ -14,8 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -111,52 +109,46 @@ fun DetailMovieScreen(
                         .fillMaxSize()
                         .verticalScroll(rememberScrollState())
                 ) {
+                    // ── Backdrop + poster + rating badge ──────────────────────
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(280.dp)
+                            .height(271.dp)
                     ) {
+                        // Backdrop
                         AsyncImage(
                             model = detail.backdropPath,
-                            contentDescription = detail.title,
-                            modifier = Modifier.fillMaxSize(),
+                            contentDescription = null,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(210.dp),
                             contentScale = ContentScale.Crop
                         )
+                        // Gradient overlay
                         Box(
                             modifier = Modifier
-                                .fillMaxSize()
+                                .fillMaxWidth()
+                                .height(210.dp)
                                 .background(
                                     Brush.verticalGradient(
                                         colors = listOf(Color(0x44000000), DarkBg)
                                     )
                                 )
                         )
-                    }
-
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 24.dp)
-                    ) {
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        Text(
-                            text = detail.title,
-                            color = Color.White,
-                            fontFamily = Montserrat,
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.SemiBold
-                        )
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
+                        // Rating badge — top-right over backdrop
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.clickable { viewModel.showRatingDialog() }
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .padding(top = 148.dp, end = 16.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(Color(0x52252836))
+                                .clickable { viewModel.showRatingDialog() }
+                                .padding(horizontal = 8.dp, vertical = 4.dp)
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Star,
-                                contentDescription = "Rating",
+                                contentDescription = null,
                                 tint = AccentOrange,
                                 modifier = Modifier.size(16.dp)
                             )
@@ -171,108 +163,138 @@ fun DetailMovieScreen(
                                 fontWeight = FontWeight.SemiBold
                             )
                         }
-
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    imageVector = Icons.Outlined.CalendarToday,
-                                    contentDescription = null,
-                                    tint = TextGrey,
-                                    modifier = Modifier.size(14.dp)
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text(
-                                    text = detail.releaseDate.take(4),
-                                    color = TextGrey,
-                                    fontFamily = Montserrat,
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Medium
-                                )
-                            }
-                            Text(text = "|", color = TextGrey, fontSize = 12.sp)
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    imageVector = Icons.Outlined.AccessTime,
-                                    contentDescription = null,
-                                    tint = TextGrey,
-                                    modifier = Modifier.size(14.dp)
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text(
-                                    text = "${detail.runtime ?: 0} Minutes",
-                                    color = TextGrey,
-                                    fontFamily = Montserrat,
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Medium
-                                )
-                            }
-                            Text(text = "|", color = TextGrey, fontSize = 12.sp)
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    imageVector = Icons.Outlined.LocalActivity,
-                                    contentDescription = null,
-                                    tint = TextGrey,
-                                    modifier = Modifier.size(14.dp)
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text(
-                                    text = detail.genres.firstOrNull()?.name ?: "",
-                                    color = TextGrey,
-                                    fontFamily = Montserrat,
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Medium
-                                )
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(24.dp))
-
-                        TabRow(
-                            selectedTabIndex = selectedTab,
-                            containerColor = Color.Transparent,
-                            contentColor = Color.White,
-                            indicator = { tabPositions ->
-                                Box(
-                                    Modifier
-                                        .tabIndicatorOffset(tabPositions[selectedTab])
-                                        .height(3.dp)
-                                        .background(AccentBlue)
-                                )
+                        // Poster thumbnail — bottom-start, overlaps backdrop
+                        AsyncImage(
+                            model = detail.posterPath?.let {
+                                "https://image.tmdb.org/t/p/w500$it"
                             },
-                            divider = {}
-                        ) {
-                            TAB_LABELS.forEachIndexed { index, title ->
-                                Tab(
-                                    selected = selectedTab == index,
-                                    onClick = { selectedTab = index },
-                                    text = {
-                                        Text(
-                                            text = title,
-                                            color = if (selectedTab == index) Color.White else TextGrey,
-                                            fontFamily = Montserrat,
-                                            fontSize = 14.sp,
-                                            fontWeight = if (selectedTab == index) FontWeight.Medium else FontWeight.Normal
-                                        )
-                                    }
-                                )
-                            }
+                            contentDescription = detail.title,
+                            modifier = Modifier
+                                .align(Alignment.BottomStart)
+                                .padding(start = 29.dp)
+                                .size(width = 95.dp, height = 120.dp)
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(Color(0xFF3A3F47)),
+                            contentScale = ContentScale.Crop
+                        )
+                        // Title — to the right of poster, anchored to bottom
+                        Text(
+                            text = detail.title,
+                            color = Color.White,
+                            fontFamily = Montserrat,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            maxLines = 3,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier
+                                .align(Alignment.BottomStart)
+                                .padding(start = 136.dp, end = 29.dp, bottom = 4.dp)
+                        )
+                    }
+
+                    // ── Meta row ──────────────────────────────────────────────
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Row(
+                        modifier = Modifier.padding(start = 29.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Outlined.CalendarToday,
+                                contentDescription = null,
+                                tint = TextGrey,
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = detail.releaseDate.take(4),
+                                color = TextGrey,
+                                fontFamily = Montserrat,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Medium
+                            )
                         }
+                        Text(text = "|", color = TextGrey, fontSize = 12.sp)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Outlined.AccessTime,
+                                contentDescription = null,
+                                tint = TextGrey,
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "${detail.runtime ?: 0} Minutes",
+                                color = TextGrey,
+                                fontFamily = Montserrat,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                        Text(text = "|", color = TextGrey, fontSize = 12.sp)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Outlined.LocalActivity,
+                                contentDescription = null,
+                                tint = TextGrey,
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = detail.genres.firstOrNull()?.name ?: "",
+                                color = TextGrey,
+                                fontFamily = Montserrat,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                    }
 
-                        Spacer(modifier = Modifier.height(16.dp))
+                    // ── Tabs ──────────────────────────────────────────────────
+                    Spacer(modifier = Modifier.height(24.dp))
+                    TabRow(
+                        selectedTabIndex = selectedTab,
+                        containerColor = Color.Transparent,
+                        contentColor = Color.White,
+                        indicator = { tabPositions ->
+                            Box(
+                                Modifier
+                                    .tabIndicatorOffset(tabPositions[selectedTab])
+                                    .height(3.dp)
+                                    .background(AccentBlue)
+                            )
+                        },
+                        divider = {}
+                    ) {
+                        TAB_LABELS.forEachIndexed { index, title ->
+                            Tab(
+                                selected = selectedTab == index,
+                                onClick = { selectedTab = index },
+                                text = {
+                                    Text(
+                                        text = title,
+                                        color = if (selectedTab == index) Color.White else TextGrey,
+                                        fontFamily = Montserrat,
+                                        fontSize = 14.sp,
+                                        fontWeight = if (selectedTab == index) FontWeight.Medium else FontWeight.Normal
+                                    )
+                                }
+                            )
+                        }
+                    }
 
+                    // ── Tab content ───────────────────────────────────────────
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Box(modifier = Modifier.padding(horizontal = 24.dp)) {
                         when (selectedTab) {
                             0 -> AboutMovieTab(overview = detail.overview ?: "")
                             1 -> ReviewsTab(reviews = state.reviews)
                             2 -> CastTab(cast = state.cast)
                         }
-
-                        Spacer(modifier = Modifier.height(80.dp))
                     }
+
+                    Spacer(modifier = Modifier.height(80.dp))
                 }
 
                 DetailToolbar(
@@ -325,7 +347,7 @@ private fun DetailToolbar(
         IconButton(onClick = onBookmarkClick) {
             Icon(
                 imageVector = if (isInWatchlist) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
-                contentDescription = if (isInWatchlist) "Remove from watchlist" else "Add to watchlist",
+                contentDescription = null,
                 tint = if (isInWatchlist) AccentBlue else Color.White
             )
         }
@@ -355,7 +377,7 @@ private fun ReviewsTab(reviews: List<Review>) {
         )
         return
     }
-    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
         reviews.forEach { review ->
             ReviewCard(review = review)
         }
@@ -364,36 +386,60 @@ private fun ReviewsTab(reviews: List<Review>) {
 
 @Composable
 private fun ReviewCard(review: Review) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(Color(0xFF3A3F47))
-            .padding(16.dp)
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.Top
     ) {
-        Text(
-            text = review.author,
-            color = Color.White,
-            fontFamily = Montserrat,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.SemiBold
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = review.createdAt.take(10),
-            color = TextGrey,
-            fontFamily = Montserrat,
-            fontSize = 11.sp
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = review.content,
-            color = Color(0xFFEBEBEF),
-            fontFamily = Montserrat,
-            fontSize = 12.sp,
-            maxLines = 5,
-            overflow = TextOverflow.Ellipsis
-        )
+        // Avatar + rating column
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.width(44.dp)
+        ) {
+            AsyncImage(
+                model = review.avatarPath,
+                contentDescription = review.author,
+                modifier = Modifier
+                    .size(44.dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFF3A3F47)),
+                contentScale = ContentScale.Crop
+            )
+            review.rating?.let {
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "%.1f".format(it),
+                    color = AccentBlue,
+                    fontFamily = Montserrat,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium,
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+        // Content column
+        Column(
+            modifier = Modifier
+                .padding(start = 12.dp)
+                .weight(1f)
+        ) {
+            Text(
+                text = review.author,
+                color = Color.White,
+                fontFamily = Montserrat,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.SemiBold
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = review.content,
+                color = Color.White,
+                fontFamily = Montserrat,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Normal,
+                maxLines = 5,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
     }
 }
 
@@ -408,45 +454,50 @@ private fun CastTab(cast: List<Cast>) {
         )
         return
     }
-    LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-        items(items = cast, key = { "${it.castId}_${it.name}" }) { member ->
-            CastCard(cast = member)
+    val rows = cast.chunked(2)
+    Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
+        rows.forEach { rowItems ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                rowItems.forEach { member ->
+                    CastCard(
+                        cast = member,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+                if (rowItems.size == 1) {
+                    Spacer(modifier = Modifier.weight(1f))
+                }
+            }
         }
     }
 }
 
 @Composable
-private fun CastCard(cast: Cast) {
+private fun CastCard(cast: Cast, modifier: Modifier = Modifier) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.width(80.dp)
+        modifier = modifier
     ) {
         AsyncImage(
             model = cast.profilePath,
             contentDescription = cast.name,
             modifier = Modifier
-                .size(70.dp)
+                .size(100.dp)
                 .clip(CircleShape)
                 .background(Color(0xFF3A3F47)),
             contentScale = ContentScale.Crop
         )
-        Spacer(modifier = Modifier.height(6.dp))
+        Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = cast.name,
             color = Color.White,
             fontFamily = Montserrat,
-            fontSize = 11.sp,
+            fontSize = 12.sp,
             fontWeight = FontWeight.Medium,
             maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-            textAlign = TextAlign.Center
-        )
-        Text(
-            text = cast.character,
-            color = TextGrey,
-            fontFamily = Montserrat,
-            fontSize = 10.sp,
-            maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             textAlign = TextAlign.Center
         )
