@@ -6,6 +6,7 @@ import com.practice.domain.model.WatchlistMovie
 import com.practice.domain.repository.LocalRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
 import javax.inject.Inject
 
 class LocalRepositoryImpl @Inject constructor(
@@ -23,7 +24,7 @@ class LocalRepositoryImpl @Inject constructor(
 
     override suspend fun saveRating(movieId: Int, rating: Float) = dao.updateRating(movieId, rating)
 
-    override fun getRating(movieId: Int): Flow<Float?> = dao.getRating(movieId)
+    override fun getRating(movieId: Int): Flow<Float?> = dao.getRating(movieId).onStart { emit(null) }
 }
 
 private fun WatchlistEntity.toDomain() = WatchlistMovie(

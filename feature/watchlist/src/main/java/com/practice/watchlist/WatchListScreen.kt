@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -126,17 +125,15 @@ private fun WatchListEmptyState(modifier: Modifier = Modifier) {
 @Composable
 private fun WatchlistMovieCard(movie: WatchlistMovie) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(120.dp),
+        modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
     ) {
         AsyncImage(
             model = movie.posterPath,
             contentDescription = movie.title,
             modifier = Modifier
-                .width(100.dp)
-                .aspectRatio(2f / 3f)
+                .width(80.dp)
+                .height(120.dp)
                 .clip(RoundedCornerShape(16.dp))
                 .background(Color(0xFF3A3F47)),
             contentScale = ContentScale.Crop
