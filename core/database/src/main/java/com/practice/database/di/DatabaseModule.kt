@@ -18,7 +18,9 @@ object DatabaseModule {
     @Provides
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): TheMoviesDatabase =
-        Room.databaseBuilder(context, TheMoviesDatabase::class.java, "themovies.db").build()
+        Room.databaseBuilder(context, TheMoviesDatabase::class.java, "themovies.db")
+            .fallbackToDestructiveMigration()
+            .build()
 
     @Provides
     fun provideWatchlistDao(db: TheMoviesDatabase): WatchlistDao = db.watchlistDao()
