@@ -23,4 +23,7 @@ interface WatchlistDao {
 
     @Query("UPDATE watchlist SET userRating = :rating WHERE movieId = :movieId")
     suspend fun updateRating(movieId: Int, rating: Float)
+
+    @Query("SELECT userRating FROM watchlist WHERE movieId = :movieId")
+    fun getRating(movieId: Int): Flow<Float?>
 }

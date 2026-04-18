@@ -22,6 +22,8 @@ class LocalRepositoryImpl @Inject constructor(
     override fun isInWatchlist(movieId: Int): Flow<Boolean> = dao.existsById(movieId)
 
     override suspend fun saveRating(movieId: Int, rating: Float) = dao.updateRating(movieId, rating)
+
+    override fun getRating(movieId: Int): Flow<Float?> = dao.getRating(movieId)
 }
 
 private fun WatchlistEntity.toDomain() = WatchlistMovie(

@@ -65,6 +65,8 @@ import com.practice.domain.model.Cast
 import com.practice.domain.model.Review
 import com.practice.ui.Montserrat
 
+private val TAB_LABELS = listOf("About Movie", "Reviews", "Cast")
+
 private val DarkBg = Color(0xFF242A32)
 private val AccentBlue = Color(0xFF0296E5)
 private val AccentOrange = Color(0xFFFF8700)
@@ -77,7 +79,6 @@ fun DetailMovieScreen(
     viewModel: DetailMovieViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
-    val tabs = listOf("About Movie", "Reviews", "Cast")
     var selectedTab by remember { mutableIntStateOf(0) }
 
     Box(
@@ -245,7 +246,7 @@ fun DetailMovieScreen(
                             },
                             divider = {}
                         ) {
-                            tabs.forEachIndexed { index, title ->
+                            TAB_LABELS.forEachIndexed { index, title ->
                                 Tab(
                                     selected = selectedTab == index,
                                     onClick = { selectedTab = index },
@@ -408,7 +409,7 @@ private fun CastTab(cast: List<Cast>) {
         return
     }
     LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-        items(items = cast, key = { it.castId }) { member ->
+        items(items = cast, key = { "${it.castId}_${it.name}" }) { member ->
             CastCard(cast = member)
         }
     }

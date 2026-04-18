@@ -9,4 +9,5 @@ interface LocalRepository {
     fun getWatchlist(): Flow<List<WatchlistMovie>>
     fun isInWatchlist(movieId: Int): Flow<Boolean>
     suspend fun saveRating(movieId: Int, rating: Float)
+    fun getRating(movieId: Int): Flow<Float?>
 }

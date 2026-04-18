@@ -10,6 +10,7 @@ import com.practice.domain.model.WatchlistMovie
 import com.practice.domain.usecase.GetMovieCastUseCase
 import com.practice.domain.usecase.GetMovieDetailsUseCase
 import com.practice.domain.usecase.GetMovieReviewsUseCase
+import com.practice.domain.usecase.GetRatingUseCase
 import com.practice.domain.usecase.IsInWatchlistUseCase
 import com.practice.domain.usecase.RemoveFromWatchlistUseCase
 import com.practice.domain.usecase.SaveRatingUseCase
@@ -44,7 +45,8 @@ class DetailMovieViewModel @Inject constructor(
     private val isInWatchlistUseCase: IsInWatchlistUseCase,
     private val saveToWatchlistUseCase: SaveToWatchlistUseCase,
     private val removeFromWatchlistUseCase: RemoveFromWatchlistUseCase,
-    private val saveRatingUseCase: SaveRatingUseCase
+    private val saveRatingUseCase: SaveRatingUseCase,
+    private val getRatingUseCase: GetRatingUseCase
 ) : ViewModel() {
 
     private val movieId: Int = checkNotNull(savedStateHandle["movieId"])
@@ -55,6 +57,7 @@ class DetailMovieViewModel @Inject constructor(
     init {
         loadData()
         observeWatchlistStatus()
+        observeRating()
     }
 
     private fun loadData() {
@@ -90,6 +93,14 @@ class DetailMovieViewModel @Inject constructor(
         }
     }
 
+    private fun observeRating() {
+        viewModelScope.launch {
+            getRatingUseCase(movieId).collect { rating ->
+                _state.update { it.copy(userRating = rating) }
+            }
+        }
+    }
+
     fun toggleWatchlist() {
         viewModelScope.launch {
             val current = _state.value
@@ -97,18 +108,7 @@ class DetailMovieViewModel @Inject constructor(
             if (current.isInWatchlist) {
                 removeFromWatchlistUseCase(movieId)
             } else {
-                saveToWatchlistUseCase(
-                    WatchlistMovie(
-                        id = detail.id,
-                        title = detail.title,
-                        posterPath = detail.posterPath?.let { "https://image.tmdb.org/t/p/w500$it" },
-                        backdropPath = detail.backdropPath,
-                        releaseDate = detail.releaseDate,
-                        voteAverage = detail.voteAverage,
-                        runtime = detail.runtime?.toInt() ?: 0,
-                        genre = detail.genres.firstOrNull()?.name ?: ""
-                    )
-                )
+                saveToWatchlistUseCase(detail.toWatchlistMovie())
             }
         }
     }
@@ -119,23 +119,24 @@ class DetailMovieViewModel @Inject constructor(
 
     fun submitRating(rating: Float) {
         viewModelScope.launch {
-            val detail = _state.value.movieDetail ?: return@launch
-            if (!_state.value.isInWatchlist) {
-                saveToWatchlistUseCase(
-                    WatchlistMovie(
-                        id = detail.id,
-                        title = detail.title,
-                        posterPath = detail.posterPath?.let { "https://image.tmdb.org/t/p/w500$it" },
-                        backdropPath = detail.backdropPath,
-                        releaseDate = detail.releaseDate,
-                        voteAverage = detail.voteAverage,
-                        runtime = detail.runtime?.toInt() ?: 0,
-                        genre = detail.genres.firstOrNull()?.name ?: ""
-                    )
-                )
+            val current = _state.value
+            val detail = current.movieDetail ?: return@launch
+            if (!current.isInWatchlist) {
+                saveToWatchlistUseCase(detail.toWatchlistMovie())
             }
             saveRatingUseCase(movieId, rating)
-            _state.update { it.copy(userRating = rating, showRatingDialog = false) }
+            _state.update { it.copy(showRatingDialog = false) }
         }
     }
+
+    private fun MovieDetail.toWatchlistMovie() = WatchlistMovie(
+        id = id,
+        title = title,
+        posterPath = posterPath?.let { "https://image.tmdb.org/t/p/w500$it" },
+        backdropPath = backdropPath,
+        releaseDate = releaseDate,
+        voteAverage = voteAverage,
+        runtime = runtime?.toInt() ?: 0,
+        genre = genres.firstOrNull()?.name ?: ""
+    )
 }
