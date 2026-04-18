@@ -28,10 +28,12 @@ import androidx.compose.ui.unit.dp
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.google.accompanist.systemuicontroller.SystemUiController
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.practice.home.HomeScreen
@@ -126,7 +128,10 @@ fun NavigationGraph(navController: NavHostController, paddingValues: PaddingValu
                 }
             )
         }
-        composable("detail/{movieId}") {
+        composable(
+            route = "detail/{movieId}",
+            arguments = listOf(navArgument("movieId") { type = NavType.IntType })
+        ) {
             DetailMovieScreen(onBackClick = { navController.popBackStack() })
         }
     }
