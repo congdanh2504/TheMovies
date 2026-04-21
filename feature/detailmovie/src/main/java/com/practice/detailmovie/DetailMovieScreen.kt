@@ -73,8 +73,11 @@ private val TextGrey = Color(0xFF92929D)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DetailMovieScreen(
+    movieId: Int,
     onBackClick: () -> Unit,
-    viewModel: DetailMovieViewModel = hiltViewModel()
+    viewModel: DetailMovieViewModel = hiltViewModel<DetailMovieViewModel, DetailMovieViewModel.Factory>(
+        creationCallback = { factory -> factory.create(movieId) }
+    )
 ) {
     val state by viewModel.state.collectAsState()
     var selectedTab by remember { mutableIntStateOf(0) }
