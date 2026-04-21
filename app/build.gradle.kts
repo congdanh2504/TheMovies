@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.themovies.android.application)
     alias(libs.plugins.themovies.android.compose)
     alias(libs.plugins.themovies.android.hilt)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 val keystorePropertiesFile = rootProject.file("keystore.properties")
@@ -61,7 +62,8 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
     testImplementation(libs.junit)
     implementation(libs.androidx.core.splashscreen)
-    implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.navigation3.ui)
+    implementation(libs.kotlinx.serialization.json)
     implementation(libs.accompanist.systemuicontroller)
     implementation(libs.androidx.hilt.navigation.compose)
 }
