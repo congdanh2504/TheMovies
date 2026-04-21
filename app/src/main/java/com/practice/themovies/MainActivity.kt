@@ -6,7 +6,6 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -27,22 +26,24 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavHostController
-import androidx.navigation.NavType
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
+import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.runtime.entry
+import androidx.navigation3.ui.NavDisplay
 import com.google.accompanist.systemuicontroller.SystemUiController
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import com.practice.detailmovie.DetailMovieScreen
 import com.practice.home.HomeScreen
 import com.practice.home.HomeViewModel
 import com.practice.search.SearchScreen
 import com.practice.search.SearchViewModel
+import com.practice.themovies.navigation.BottomNavItem
+import com.practice.themovies.navigation.DetailDestination
+import com.practice.themovies.navigation.HomeDestination
+import com.practice.themovies.navigation.NavigationViewModel
+import com.practice.themovies.navigation.SearchDestination
+import com.practice.themovies.navigation.WatchlistDestination
 import com.practice.themovies.ui.theme.DarkGray
 import com.practice.themovies.ui.theme.TheMoviesTheme
-import com.practice.detailmovie.DetailMovieScreen
 import com.practice.watchlist.WatchListScreen
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -51,166 +52,126 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
-
         setContent {
             TheMoviesTheme {
-                val navController = rememberNavController()
                 val systemUiController = rememberSystemUiController()
                 val backgroundColor = DarkGray
-
-                ConfigureSystemUI(systemUiController, backgroundColor)
-
-                MainScaffold(navController)
+                SideEffect {
+                    systemUiController.setStatusBarColor(
+                        color = backgroundColor,
+                        darkIcons = false
+                    )
+                }
+                MainScaffold()
             }
         }
     }
 }
 
 @Composable
-fun ConfigureSystemUI(systemUiController: SystemUiController, backgroundColor: Color) {
-    SideEffect {
-        systemUiController.setStatusBarColor(
-            color = backgroundColor,
-            darkIcons = false
+fun MainScaffold() {
+    val navViewModel: NavigationViewModel = hiltViewModel()
+    val backStack = navViewModel.backStack
+    val currentDestination = backStack.lastOrNull()
+    val showBottomBar = currentDestination !is DetailDestination
+
+    Scaffold(
+        bottomBar = {
+            if (showBottomBar) {
+                BottomNavigationBar(
+                    currentDestination = currentDestination,
+                    onTabSelected = { navViewModel.navigateToTab(it) }
+                )
+            }
+        },
+        containerColor = MaterialTheme.colorScheme.surface,
+    ) { innerPadding ->
+        NavDisplay(
+            backStack = backStack,
+            onBack = { navViewModel.popBack() },
+            modifier = Modifier.padding(innerPadding),
+            entryProvider = entryProvider {
+                entry<HomeDestination> {
+                    val homeViewModel: HomeViewModel = hiltViewModel()
+                    val homeUiState by homeViewModel.uiState.collectAsState()
+                    HomeScreen(
+                        homeUiState = homeUiState,
+                        onMovieClick = { movieId ->
+                            navViewModel.navigate(DetailDestination(movieId))
+                        },
+                        onSearchClick = {
+                            navViewModel.navigate(SearchDestination)
+                        }
+                    )
+                }
+                entry<SearchDestination> {
+                    val searchViewModel: SearchViewModel = hiltViewModel()
+                    SearchScreen(
+                        onBackClick = { navViewModel.popBack() },
+                        onMovieClick = { movieId ->
+                            navViewModel.navigate(DetailDestination(movieId))
+                        },
+                        searchViewModel = searchViewModel
+                    )
+                }
+                entry<WatchlistDestination> {
+                    WatchListScreen(
+                        onBackClick = { navViewModel.popBack() },
+                        onMovieClick = { movieId ->
+                            navViewModel.navigate(DetailDestination(movieId))
+                        }
+                    )
+                }
+                entry<DetailDestination> { dest ->
+                    DetailMovieScreen(
+                        movieId = dest.movieId,
+                        onBackClick = { navViewModel.popBack() }
+                    )
+                }
+            }
         )
     }
 }
 
 @Composable
-fun MainScaffold(navController: NavHostController) {
-    val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
-    val showBottomBar = currentRoute != DetailDestination.ROUTE
-
-    Scaffold(
-        bottomBar = { if (showBottomBar) BottomNavigationBar(navController) },
-        containerColor = MaterialTheme.colorScheme.surface,
-    ) { innerPadding ->
-        NavigationGraph(navController, innerPadding)
-    }
-}
-
-@Composable
-fun NavigationGraph(navController: NavHostController, paddingValues: PaddingValues) {
-    NavHost(
-        navController,
-        startDestination = BottomNavItem.Home.route,
-        modifier = Modifier.padding(paddingValues)
-    ) {
-        composable(BottomNavItem.Home.route) {
-            val homeViewModel: HomeViewModel = hiltViewModel()
-            val homeUiState by homeViewModel.uiState.collectAsState()
-            HomeScreen(
-                homeUiState = homeUiState,
-                onMovieClick = { movieId ->
-                    navController.navigate(DetailDestination.createRoute(movieId))
-                },
-                onSearchClick = {
-                    navController.navigate(BottomNavItem.Search.route) {
-                        popUpTo(navController.graph.startDestinationId) {
-                            saveState = true
-                        }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                }
-            )
-        }
-        composable(BottomNavItem.Search.route) {
-            val searchViewModel: SearchViewModel = hiltViewModel()
-            SearchScreen(
-                onBackClick = { navController.popBackStack() },
-                onMovieClick = { navController.navigate(DetailDestination.createRoute(it)) },
-                searchViewModel = searchViewModel
-            )
-        }
-        composable(BottomNavItem.Profile.route) {
-            WatchListScreen(
-                onBackClick = { navController.popBackStack() },
-                onMovieClick = { navController.navigate(DetailDestination.createRoute(it)) }
-            )
-        }
-        composable(
-            route = DetailDestination.ROUTE,
-            arguments = listOf(navArgument(DetailDestination.ARG_MOVIE_ID) { type = NavType.IntType })
-        ) {
-            DetailMovieScreen(onBackClick = { navController.popBackStack() })
-        }
-    }
-}
-
-sealed class BottomNavItem(val route: String, val icon: Int, val label: String) {
-    object Home : BottomNavItem("home", R.drawable.ic_home, "Home")
-    object Search : BottomNavItem("search", R.drawable.ic_search, "Search")
-    object Profile : BottomNavItem("watchlist", R.drawable.ic_save, "Watch List")
-}
-
-object DetailDestination {
-    const val ARG_MOVIE_ID = "movieId"
-    const val ROUTE = "detail/{$ARG_MOVIE_ID}"
-    fun createRoute(movieId: Int) = "detail/$movieId"
-}
-
-@Composable
-fun BottomNavigationBar(navController: NavHostController) {
+fun BottomNavigationBar(
+    currentDestination: Any?,
+    onTabSelected: (Any) -> Unit
+) {
     val items = listOf(
         BottomNavItem.Home,
         BottomNavItem.Search,
-        BottomNavItem.Profile
+        BottomNavItem.Watchlist
     )
     Column {
-        DividerLine()
-        BottomNavItems(navController, items)
-    }
-}
-
-@Composable
-fun DividerLine() {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(1.dp)
-            .background(MaterialTheme.colorScheme.primary)
-    )
-}
-
-@Composable
-fun BottomNavItems(navController: NavHostController, items: List<BottomNavItem>) {
-    NavigationBar(
-        containerColor = MaterialTheme.colorScheme.surface,
-    ) {
-        val navBackStackEntry by navController.currentBackStackEntryAsState()
-        val currentRoute = navBackStackEntry?.destination?.route
-
-        items.forEach { item ->
-            NavigationBarItem(
-                icon = {
-                    Icon(
-                        painter = painterResource(id = item.icon),
-                        contentDescription = item.label
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(MaterialTheme.colorScheme.primary)
+        )
+        NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
+            items.forEach { item ->
+                val selected = currentDestination?.let { it::class == item.destination::class } ?: false
+                NavigationBarItem(
+                    icon = {
+                        Icon(
+                            painter = painterResource(id = item.icon),
+                            contentDescription = item.label
+                        )
+                    },
+                    label = { Text(item.label) },
+                    selected = selected,
+                    onClick = { if (!selected) onTabSelected(item.destination) },
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = MaterialTheme.colorScheme.primary,
+                        unselectedIconColor = MaterialTheme.colorScheme.secondary,
+                        selectedTextColor = MaterialTheme.colorScheme.primary,
+                        unselectedTextColor = MaterialTheme.colorScheme.secondary,
+                        indicatorColor = Color(0x00FFFFFF)
                     )
-                },
-                label = { Text(item.label) },
-                selected = currentRoute == item.route,
-                onClick = {
-                    if (currentRoute != item.route) {
-                        navController.navigate(item.route) {
-                            popUpTo(navController.graph.startDestinationId) {
-                                saveState = true
-                            }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                    }
-                },
-                colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = MaterialTheme.colorScheme.primary,
-                    unselectedIconColor = MaterialTheme.colorScheme.secondary,
-                    selectedTextColor = MaterialTheme.colorScheme.primary,
-                    unselectedTextColor = MaterialTheme.colorScheme.secondary,
-                    indicatorColor = Color(0x00FFFFFF)
                 )
-            )
+            }
         }
     }
 }
-
