@@ -1,5 +1,6 @@
 package com.practice.themovies.navigation
 
+import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -7,8 +8,7 @@ import javax.inject.Inject
 @HiltViewModel
 class NavigationViewModel @Inject constructor() : ViewModel() {
 
-    private val _backStack = mutableListOf<Any>(HomeDestination)
-    val backStack: MutableList<Any> get() = _backStack
+    val backStack = mutableStateListOf<Any>(HomeDestination)
 
     fun navigate(destination: Any) {
         backStack.add(destination)
