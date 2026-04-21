@@ -1,6 +1,5 @@
 package com.practice.detailmovie
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.practice.domain.model.Cast
@@ -15,6 +14,9 @@ import com.practice.domain.usecase.IsInWatchlistUseCase
 import com.practice.domain.usecase.RemoveFromWatchlistUseCase
 import com.practice.domain.usecase.SaveRatingUseCase
 import com.practice.domain.usecase.SaveToWatchlistUseCase
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,7 +25,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
-import javax.inject.Inject
 
 data class DetailUiState(
     val movieDetail: MovieDetail? = null,
@@ -36,9 +37,9 @@ data class DetailUiState(
     val error: String? = null
 )
 
-@HiltViewModel
-class DetailMovieViewModel @Inject constructor(
-    savedStateHandle: SavedStateHandle,
+@HiltViewModel(assistedFactory = DetailMovieViewModel.Factory::class)
+class DetailMovieViewModel @AssistedInject constructor(
+    @Assisted val movieId: Int,
     private val getMovieDetailsUseCase: GetMovieDetailsUseCase,
     private val getMovieCastUseCase: GetMovieCastUseCase,
     private val getMovieReviewsUseCase: GetMovieReviewsUseCase,
@@ -49,7 +50,10 @@ class DetailMovieViewModel @Inject constructor(
     private val getRatingUseCase: GetRatingUseCase
 ) : ViewModel() {
 
-    private val movieId: Int = checkNotNull(savedStateHandle["movieId"])
+    @AssistedFactory
+    interface Factory {
+        fun create(movieId: Int): DetailMovieViewModel
+    }
 
     private val _state = MutableStateFlow(DetailUiState())
     val state: StateFlow<DetailUiState> = _state.asStateFlow()
