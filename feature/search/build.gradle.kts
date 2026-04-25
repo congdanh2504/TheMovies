@@ -12,4 +12,5 @@ dependencies {
     implementation(project(":core:domain"))
     implementation(project(":core:ui"))
     implementation(libs.coil.compose)
+    implementation(libs.paging.compose)
 }

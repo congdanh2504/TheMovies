@@ -68,9 +68,9 @@ class DetailMovieViewModel @AssistedInject constructor(
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }
             supervisorScope {
-                val detailDeferred = async { runCatching { getMovieDetailsUseCase(movieId) } }
-                val castDeferred = async { runCatching { getMovieCastUseCase(movieId) } }
-                val reviewsDeferred = async { runCatching { getMovieReviewsUseCase(movieId) } }
+                val detailDeferred = async { getMovieDetailsUseCase(movieId) }
+                val castDeferred = async { getMovieCastUseCase(movieId) }
+                val reviewsDeferred = async { getMovieReviewsUseCase(movieId) }
 
                 val detail = detailDeferred.await()
                 val cast = castDeferred.await()
@@ -79,10 +79,10 @@ class DetailMovieViewModel @AssistedInject constructor(
                 _state.update {
                     it.copy(
                         movieDetail = detail.getOrNull(),
-                        cast = cast.getOrNull() ?: emptyList(),
-                        reviews = reviews.getOrNull() ?: emptyList(),
+                        cast = cast.getOrElse { emptyList() },
+                        reviews = reviews.getOrElse { emptyList() },
                         isLoading = false,
-                        error = if (detail.isFailure) detail.exceptionOrNull()?.message else null
+                        error = detail.exceptionOrNull()?.message
                     )
                 }
             }

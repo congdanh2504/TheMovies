@@ -12,12 +12,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
+import androidx.paging.LoadState
+import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemKey
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -39,11 +40,10 @@ fun SearchScreen(
     onMovieClick: (Int) -> Unit = {},
     searchViewModel: SearchViewModel,
 ) {
-    val state by searchViewModel.state.collectAsState()
+    val query by searchViewModel.query.collectAsState()
+    val searchResults = searchViewModel.searchResults.collectAsLazyPagingItems()
 
-    Column(
-        modifier = Modifier.fillMaxSize()
-    ) {
+    Column(modifier = Modifier.fillMaxSize()) {
         ToolBar(
             title = "Search",
             onBackClick = onBackClick,
@@ -55,39 +55,61 @@ fun SearchScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         SearchBar(
-            modifier = Modifier
-                .padding(horizontal = 16.dp),
-            onTextChanged = { q ->
-                searchViewModel.processIntent(SearchIntent.QueryChanged(q))
-            }
+            modifier = Modifier.padding(horizontal = 16.dp),
+            onTextChanged = { searchViewModel.onQueryChanged(it) }
         )
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        if (!state.isLoading && state.movies.isEmpty()) {
-            NoResultView(
-                modifier = Modifier
-                    .padding(horizontal = 94.dp)
-            )
-            return@Column
-        }
+        val isRefreshing = searchResults.loadState.refresh is LoadState.Loading
+        val refreshError = searchResults.loadState.refresh as? LoadState.Error
 
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(16.dp)
-        ) {
-            items(items = state.movies, key = { it.id }) {
-                SearchMovie(
-                    movie = it,
-                    posterPainter = rememberAsyncImagePainter(it.posterPath),
-                    onClick = onMovieClick
-                )
+        when {
+            query.isBlank() -> NoResultView(modifier = Modifier.padding(horizontal = 94.dp))
+
+            isRefreshing && searchResults.itemCount == 0 -> Box(Modifier.fillMaxSize()) {
+                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             }
 
-            item {
-                when {
-                    state.isLoading -> {
-                        Box(
+            refreshError != null -> Box(Modifier.fillMaxSize()) {
+                Column(
+                    modifier = Modifier.align(Alignment.Center),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = refreshError.error.message ?: "Something went wrong",
+                        color = Color.Red,
+                        modifier = Modifier.padding(16.dp)
+                    )
+                    Button(onClick = { searchResults.retry() }) {
+                        Text("Retry")
+                    }
+                }
+            }
+
+            searchResults.itemCount == 0 -> NoResultView(modifier = Modifier.padding(horizontal = 94.dp))
+
+            else -> LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(16.dp)
+            ) {
+                items(
+                    count = searchResults.itemCount,
+                    key = searchResults.itemKey { it.id }
+                ) { index ->
+                    val movie = searchResults[index]
+                    if (movie != null) {
+                        SearchMovie(
+                            movie = movie,
+                            posterPainter = rememberAsyncImagePainter(movie.posterPath),
+                            onClick = onMovieClick
+                        )
+                    }
+                }
+
+                item {
+                    when (val appendState = searchResults.loadState.append) {
+                        is LoadState.Loading -> Box(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(16.dp),
@@ -95,21 +117,21 @@ fun SearchScreen(
                         ) {
                             CircularProgressIndicator()
                         }
-
-                    }
-                    state.error != null -> {
-                        Text(
-                            text = "Error: ${state.error}",
-                            color = Color.Red,
-                            modifier = Modifier.padding(16.dp)
-                        )
-                    }
-                    else -> {
-                        LaunchedEffect(state.movies.size) {
-                            if (state.movies.isNotEmpty()) {
-                                searchViewModel.processIntent(SearchIntent.LoadMore)
+                        is LoadState.Error -> Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = appendState.error.message ?: "Load failed",
+                                color = Color.Red
+                            )
+                            Button(onClick = { searchResults.retry() }) {
+                                Text("Retry")
                             }
                         }
+                        else -> Unit
                     }
                 }
             }
@@ -120,8 +142,7 @@ fun SearchScreen(
 @Composable
 fun NoResultView(modifier: Modifier = Modifier) {
     Column(
-        modifier = modifier
-            .fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -130,10 +151,7 @@ fun NoResultView(modifier: Modifier = Modifier) {
             contentDescription = "No Result",
             modifier = Modifier.size(76.dp)
         )
-        Spacer(
-            modifier = modifier
-                .height(16.dp)
-        )
+        Spacer(modifier = Modifier.height(16.dp))
         Text(
             text = "We are sorry, we can not find the movie :(",
             color = Color.White,
@@ -143,10 +161,7 @@ fun NoResultView(modifier: Modifier = Modifier) {
                 textAlign = TextAlign.Center
             )
         )
-        Spacer(
-            modifier = modifier
-                .height(8.dp)
-        )
+        Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = "Find your movie by Type title, categories, years, etc ",
             color = Color.Gray,

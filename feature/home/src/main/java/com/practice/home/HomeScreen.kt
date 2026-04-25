@@ -23,22 +23,20 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ScrollableTabRow
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -55,45 +53,70 @@ import com.practice.ui.SearchBar
 fun HomeScreen(
     modifier: Modifier = Modifier,
     homeUiState: HomeUiState,
+    selectedTabIndex: Int = 0,
+    onTabSelected: (Int) -> Unit = {},
     onMovieClick: (Int) -> Unit,
     onSearchClick: () -> Unit,
 ) {
-    val tabs = listOf("Now playing", "Upcoming", "Top rated", "Popular")
-    var selectedTabIndex by remember { mutableIntStateOf(0) }
-
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-    ) {
+    Column(modifier = modifier.fillMaxSize()) {
         TopBar()
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .verticalScroll(rememberScrollState())
-        ) {
-            Spacer(modifier = Modifier.height(8.dp))
-            SearchBar(
-                onSearchClick = onSearchClick,
-                modifier = Modifier.padding(horizontal = 16.dp)
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            FeaturedMoviesSection(
-                featuredMovies = homeUiState.topRatedMovies,
+        SearchBar(
+            onSearchClick = onSearchClick,
+            modifier = Modifier.padding(horizontal = 16.dp)
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        when (homeUiState) {
+            is HomeUiState.Loading -> Box(Modifier.fillMaxSize()) {
+                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+            }
+            is HomeUiState.Error -> Box(Modifier.fillMaxSize()) {
+                Text(
+                    text = homeUiState.message,
+                    color = Color.Red,
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .padding(16.dp)
+                )
+            }
+            is HomeUiState.Success -> HomeSuccessContent(
+                uiState = homeUiState,
+                selectedTabIndex = selectedTabIndex,
+                onTabSelected = onTabSelected,
                 onMovieClick = onMovieClick
             )
-            CategoryTabsSection(tabs = tabs) { tabTitle ->
-                selectedTabIndex = tabs.indexOf(tabTitle)
-            }
-            Spacer(modifier = Modifier.height(16.dp))
-            val moviesForSelectedTab = when (selectedTabIndex) {
-                0 -> homeUiState.nowPlayingMovies
-                1 -> homeUiState.upcomingMovies
-                2 -> homeUiState.topRatedMovies
-                3 -> homeUiState.popularMovies
-                else -> emptyList()
-            }
-            MovieGridSection(moviesForSelectedTab, onMovieClick)
         }
+    }
+}
+
+@Composable
+private fun HomeSuccessContent(
+    uiState: HomeUiState.Success,
+    selectedTabIndex: Int,
+    onTabSelected: (Int) -> Unit,
+    onMovieClick: (Int) -> Unit
+) {
+    val tabs = listOf("Now playing", "Upcoming", "Top rated", "Popular")
+
+    Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+        Spacer(modifier = Modifier.height(8.dp))
+        FeaturedMoviesSection(
+            featuredMovies = uiState.topRatedMovies,
+            onMovieClick = onMovieClick
+        )
+        CategoryTabsSection(
+            tabs = tabs,
+            selectedTabIndex = selectedTabIndex,
+            onTabSelected = { tabTitle -> onTabSelected(tabs.indexOf(tabTitle)) }
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        val moviesForSelectedTab = when (selectedTabIndex) {
+            0 -> uiState.nowPlayingMovies
+            1 -> uiState.upcomingMovies
+            2 -> uiState.topRatedMovies
+            3 -> uiState.popularMovies
+            else -> emptyList()
+        }
+        MovieGridSection(moviesForSelectedTab, onMovieClick)
     }
 }
 
@@ -119,13 +142,11 @@ fun MoviePosterWithNumber(movie: Movie, index: Int, onMovieClick: (Movie) -> Uni
             .padding(8.dp)
             .width(160.dp)
             .height(260.dp)
-            .clickable {
-                onMovieClick(movie)
-            }
+            .clickable { onMovieClick(movie) }
     ) {
         Image(
             painter = rememberAsyncImagePainter(movie.posterPath),
-            contentDescription = "Movie Poster",
+            contentDescription = movie.title,
             contentScale = ContentScale.Crop,
             modifier = Modifier
                 .fillMaxSize()
@@ -139,8 +160,7 @@ fun MoviePosterWithNumber(movie: Movie, index: Int, onMovieClick: (Movie) -> Uni
             fontFamily = Montserrat,
             fontWeight = FontWeight.SemiBold,
             fontSize = 96.sp,
-            modifier = Modifier
-                .align(Alignment.BottomStart)
+            modifier = Modifier.align(Alignment.BottomStart)
         )
     }
 }
@@ -155,21 +175,14 @@ fun StrokedText(
     strokeColor: Color = Color(0xFF0296E5),
     fillColor: Color = Color(0xFF242A32)
 ) {
-    Box(
-        modifier = modifier
-            .wrapContentSize()
-    ) {
+    Box(modifier = modifier.wrapContentSize()) {
         Text(
             text = text,
             fontSize = fontSize,
             fontFamily = fontFamily,
             fontWeight = fontWeight,
             color = strokeColor,
-            style = TextStyle(
-                drawStyle = Stroke(
-                    width = 5f
-                )
-            )
+            style = TextStyle(drawStyle = Stroke(width = 5f))
         )
         Text(
             text = text,
@@ -191,16 +204,8 @@ fun FeaturedMoviesSection(featuredMovies: List<Movie>, onMovieClick: (Int) -> Un
         ) {
             items(5) {
                 MoviePosterWithNumber(
-                    movie = Movie(
-                        id = 0,
-                        title = "",
-                        overview = "",
-                        posterPath = "",
-                        backdropPath = "",
-                        releaseDate = "",
-                        voteAverage = 0.0,
-                        voteCount = 0
-                    ),
+                    movie = Movie(id = 0, title = "", overview = "", posterPath = "",
+                        backdropPath = "", releaseDate = "", voteAverage = 0.0, voteCount = 0),
                     index = it
                 ) {}
             }
@@ -210,15 +215,8 @@ fun FeaturedMoviesSection(featuredMovies: List<Movie>, onMovieClick: (Int) -> Un
             horizontalArrangement = Arrangement.spacedBy(6.dp),
             contentPadding = PaddingValues(horizontal = 16.dp),
         ) {
-            itemsIndexed(
-                items = featuredMovies,
-                key = { _, movie ->
-                    movie.id
-                }
-            ) { index, movie ->
-                MoviePosterWithNumber(movie = movie, index = index) {
-                    onMovieClick(movie.id)
-                }
+            itemsIndexed(items = featuredMovies, key = { _, movie -> movie.id }) { index, movie ->
+                MoviePosterWithNumber(movie = movie, index = index) { onMovieClick(movie.id) }
             }
         }
     }
@@ -228,19 +226,18 @@ fun FeaturedMoviesSection(featuredMovies: List<Movie>, onMovieClick: (Int) -> Un
 fun CategoryTabsSection(
     modifier: Modifier = Modifier,
     tabs: List<String>,
+    selectedTabIndex: Int = 0,
     onTabSelected: (String) -> Unit = {}
 ) {
-    var selectedTab by remember { mutableIntStateOf(0) }
-
     ScrollableTabRow(
         modifier = modifier,
         containerColor = Color.Transparent,
-        selectedTabIndex = selectedTab,
+        selectedTabIndex = selectedTabIndex,
         edgePadding = 0.dp,
         indicator = { tabPositions ->
             Box(
                 Modifier
-                    .tabIndicatorOffset(tabPositions[selectedTab])
+                    .tabIndicatorOffset(tabPositions[selectedTabIndex])
                     .height(3.dp)
                     .padding(horizontal = 16.dp)
                     .background(Color(0xFF3A3F47))
@@ -250,15 +247,12 @@ fun CategoryTabsSection(
     ) {
         tabs.forEachIndexed { index, title ->
             Tab(
-                selected = selectedTab == index,
-                onClick = {
-                    selectedTab = index
-                    onTabSelected(title)
-                },
+                selected = selectedTabIndex == index,
+                onClick = { onTabSelected(title) },
                 text = {
                     Text(
                         text = title,
-                        color = if (selectedTab == index) Color.White else Color.Gray
+                        color = if (selectedTabIndex == index) Color.White else Color.Gray
                     )
                 }
             )
@@ -278,26 +272,25 @@ fun MovieGridSection(movies: List<Movie>, onMovieClick: (Int) -> Unit) {
         horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         items(items = movies, key = { it.id }) { movie ->
-            MovieCard(imageUrl = movie.posterPath ?: "") {
-                onMovieClick(movie.id)
-            }
+            MovieCard(movie = movie, onMovieClick = { onMovieClick(movie.id) })
         }
     }
 }
 
 @Composable
-fun MovieCard(imageUrl: String, onMovieClick: () -> Unit) {
+fun MovieCard(movie: Movie, onMovieClick: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .aspectRatio(0.7f)
             .clip(RoundedCornerShape(16.dp))
             .background(Color.Gray)
+            .testTag("movie_card")
             .clickable { onMovieClick() }
     ) {
         Image(
-            painter = rememberAsyncImagePainter(imageUrl),
-            contentDescription = "Movie Poster",
+            painter = rememberAsyncImagePainter(movie.posterPath),
+            contentDescription = movie.title,
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
         )
@@ -308,110 +301,25 @@ fun MovieCard(imageUrl: String, onMovieClick: () -> Unit) {
 @Composable
 fun HomeScreenPreview() {
     val movies = listOf(
-        Movie(
-            id = 1,
-            title = "Movie 1",
-            overview = "Overview 1",
-            posterPath = "https://example.com/poster1.jpg",
-            backdropPath = "https://example.com/backdrop1.jpg",
-            releaseDate = "2023-01-01",
-            voteAverage = 8.0,
-            voteCount = 100
-        ),
-        Movie(
-            id = 2,
-            title = "Movie 2",
-            overview = "Overview 2",
-            posterPath = "https://example.com/poster2.jpg",
-            backdropPath = "https://example.com/backdrop2.jpg",
-            releaseDate = "2023-02-01",
-            voteAverage = 7.5,
-            voteCount = 200
-        ),
-        Movie(
-            id = 3,
-            title = "Movie 3",
-            overview = "Overview 3",
-            posterPath = "https://example.com/poster3.jpg",
-            backdropPath = "https://example.com/backdrop3.jpg",
-            releaseDate = "2023-03-01",
-            voteAverage = 7.0,
-            voteCount = 150
-        ),
-        Movie(
-            id = 4,
-            title = "Movie 4",
-            overview = "Overview 4",
-            posterPath = "https://example.com/poster4.jpg",
-            backdropPath = "https://example.com/backdrop4.jpg",
-            releaseDate = "2023-04-01",
-            voteAverage = 6.5,
-            voteCount = 120
-        ),
-        Movie(
-            id = 5,
-            title = "Movie 5",
-            overview = "Overview 5",
-            posterPath = "https://example.com/poster5.jpg",
-            backdropPath = "https://example.com/backdrop5.jpg",
-            releaseDate = "2023-05-01",
-            voteAverage = 9.0,
-            voteCount = 300
-        ),
-        Movie(
-            id = 6,
-            title = "Movie 6",
-            overview = "Overview 6",
-            posterPath = "https://example.com/poster6.jpg",
-            backdropPath = "https://example.com/backdrop6.jpg",
-            releaseDate = "2023-06-01",
-            voteAverage = 8.5,
-            voteCount = 250
-        ),
-        Movie(
-            id = 7,
-            title = "Movie 7",
-            overview = "Overview 7",
-            posterPath = "https://example.com/poster7.jpg",
-            backdropPath = "https://example.com/backdrop7.jpg",
-            releaseDate = "2023-07-01",
-            voteAverage = 7.8,
-            voteCount = 180
-        ),
-        Movie(
-            id = 8,
-            title = "Movie 8",
-            overview = "Overview 8",
-            posterPath = "https://example.com/poster8.jpg",
-            backdropPath = "https://example.com/backdrop8.jpg",
-            releaseDate = "2023-08-01",
-            voteAverage = 7.2,
-            voteCount = 130
-        ),
-        Movie(
-            id = 9,
-            title = "Movie 9",
-            overview = "Overview 9",
-            posterPath = "https://example.com/poster9.jpg",
-            backdropPath = "https://example.com/backdrop9.jpg",
-            releaseDate = "2023-09-01",
-            voteAverage = 6.9,
-            voteCount = 110
-        ),
-        Movie(
-            id = 10,
-            title = "Movie 10",
-            overview = "Overview 10",
-            posterPath = "https://example.com/poster10.jpg",
-            backdropPath = "https://example.com/backdrop10.jpg",
-            releaseDate = "2023-10-01",
-            voteAverage = 9.2,
-            voteCount = 350
-        )
+        Movie(id = 1, title = "Movie 1", overview = "Overview 1",
+            posterPath = "https://example.com/poster1.jpg", backdropPath = "https://example.com/backdrop1.jpg",
+            releaseDate = "2023-01-01", voteAverage = 8.0, voteCount = 100),
+        Movie(id = 2, title = "Movie 2", overview = "Overview 2",
+            posterPath = "https://example.com/poster2.jpg", backdropPath = "https://example.com/backdrop2.jpg",
+            releaseDate = "2023-02-01", voteAverage = 7.5, voteCount = 200),
+        Movie(id = 3, title = "Movie 3", overview = "Overview 3",
+            posterPath = "https://example.com/poster3.jpg", backdropPath = "https://example.com/backdrop3.jpg",
+            releaseDate = "2023-03-01", voteAverage = 7.0, voteCount = 150),
+        Movie(id = 4, title = "Movie 4", overview = "Overview 4",
+            posterPath = "https://example.com/poster4.jpg", backdropPath = "https://example.com/backdrop4.jpg",
+            releaseDate = "2023-04-01", voteAverage = 6.5, voteCount = 120),
+        Movie(id = 5, title = "Movie 5", overview = "Overview 5",
+            posterPath = "https://example.com/poster5.jpg", backdropPath = "https://example.com/backdrop5.jpg",
+            releaseDate = "2023-05-01", voteAverage = 9.0, voteCount = 300),
     )
 
     HomeScreen(
-        homeUiState = HomeUiState(
+        homeUiState = HomeUiState.Success(
             nowPlayingMovies = movies,
             upcomingMovies = movies,
             topRatedMovies = movies,

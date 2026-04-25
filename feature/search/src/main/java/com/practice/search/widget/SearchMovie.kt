@@ -49,7 +49,7 @@ fun SearchMovie(
     ) {
         Image(
             painter = posterPainter,
-            contentDescription = "Movie Poster",
+            contentDescription = movie.title,
             modifier = Modifier
                 .width(100.dp)
                 .aspectRatio(2f / 3f)
