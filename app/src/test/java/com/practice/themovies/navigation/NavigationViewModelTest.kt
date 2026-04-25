@@ -1,11 +1,12 @@
 package com.practice.themovies.navigation
 
+import androidx.lifecycle.SavedStateHandle
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class NavigationViewModelTest {
 
-    private fun viewModel() = NavigationViewModel()
+    private fun viewModel() = NavigationViewModel(SavedStateHandle())
 
     @Test
     fun `initial back stack contains HomeDestination`() {
@@ -50,5 +51,17 @@ class NavigationViewModelTest {
         vm.navigate(DetailDestination(5))
         vm.navigateToTab(WatchlistDestination)
         assertEquals(listOf(WatchlistDestination), vm.backStack.toList())
+    }
+
+    @Test
+    fun `back stack is restored from SavedStateHandle`() {
+        val handle = SavedStateHandle()
+        val vm1 = NavigationViewModel(handle)
+        vm1.navigate(SearchDestination)
+        vm1.navigate(DetailDestination(99))
+
+        // Simulate process death/restoration using the same handle
+        val vm2 = NavigationViewModel(handle)
+        assertEquals(listOf(HomeDestination, SearchDestination, DetailDestination(99)), vm2.backStack.toList())
     }
 }
