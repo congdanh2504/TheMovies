@@ -12,4 +12,5 @@ dependencies {
     implementation(project(":core:network"))
     implementation(project(":core:database"))
     implementation(project(":core:domain"))
+    implementation(libs.paging.runtime)
 }

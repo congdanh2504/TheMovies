@@ -9,5 +9,5 @@ android {
 }
 
 dependencies {
-
+    implementation(libs.paging.runtime)
 }
