@@ -22,6 +22,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
@@ -77,6 +80,7 @@ fun MainScaffold() {
     val showBottomBar = currentDestination !is DetailDestination
 
     Scaffold(
+        modifier = Modifier.semantics { testTagsAsResourceId = true },
         bottomBar = {
             if (showBottomBar) {
                 BottomNavigationBar(
@@ -99,8 +103,11 @@ fun MainScaffold() {
                 entry<HomeDestination> {
                     val homeViewModel: HomeViewModel = hiltViewModel()
                     val homeUiState by homeViewModel.uiState.collectAsState()
+                    val selectedTabIndex by homeViewModel.selectedTabIndex.collectAsState()
                     HomeScreen(
                         homeUiState = homeUiState,
+                        selectedTabIndex = selectedTabIndex,
+                        onTabSelected = homeViewModel::onTabSelected,
                         onMovieClick = { movieId ->
                             navViewModel.navigate(DetailDestination(movieId))
                         },
@@ -159,6 +166,7 @@ fun BottomNavigationBar(
             items.forEach { item ->
                 val selected = currentDestination?.let { it::class == item.destination::class } ?: false
                 NavigationBarItem(
+                    modifier = Modifier.testTag("nav_${item.label.lowercase().replace(" ", "_")}"),
                     icon = {
                         Icon(
                             painter = painterResource(id = item.icon),
