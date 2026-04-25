@@ -4,21 +4,15 @@ An Android movie browser app built with Jetpack Compose, powered by the [TMDB AP
 
 ## Screenshots
 
-### Home
-![Home screen — trending & popular movies](screenshots/home.png)
-
-### Search
-| Empty state | Results |
-|-------------|---------|
-| ![Search empty](screenshots/search_empty.png) | ![Search results for "Batman"](screenshots/search_results.png) |
-
-### Detail — The Batman
-| About | Reviews | Cast |
-|-------|---------|------|
-| ![Detail About tab](screenshots/detail_about.png) | ![Detail Reviews tab](screenshots/detail_reviews.png) | ![Detail Cast tab](screenshots/detail_cast.png) |
-
-### Watchlist
-![Watchlist screen](screenshots/watchlist.png)
+<p align="center">
+  <img src="screenshots/home.png" width="200" alt="Home"/>
+  <img src="screenshots/search_empty.png" width="200" alt="Search empty"/>
+  <img src="screenshots/search_results.png" width="200" alt="Search results"/>
+  <img src="screenshots/detail_about.png" width="200" alt="Detail — About"/>
+  <img src="screenshots/detail_reviews.png" width="200" alt="Detail — Reviews"/>
+  <img src="screenshots/detail_cast.png" width="200" alt="Detail — Cast"/>
+  <img src="screenshots/watchlist.png" width="200" alt="Watchlist"/>
+</p>
 
 ## Features
 
