@@ -41,7 +41,8 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -57,14 +58,20 @@ dependencies {
     implementation(project(":feature:search"))
     implementation(project(":feature:watchlist"))
     implementation(project(":core:data"))
+    implementation(project(":core:ui"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     testImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.androidx.test.uiautomator)
     implementation(libs.androidx.core.splashscreen)
     implementation(libs.androidx.navigation3.ui)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.accompanist.systemuicontroller)
     implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.lifecycle.viewmodel.navigation3)
+    implementation(libs.profileinstaller)
+    implementation(libs.timber)
 }
